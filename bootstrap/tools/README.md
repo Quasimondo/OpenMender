@@ -52,35 +52,56 @@ python context_gatherer.py --context files --max-file-size 10000
 python context_gatherer.py --context issues --output issues.txt
 ```
 
-#### Example Integration with LLMs
-```python
-# Example with OpenAI's GPT (you'll need the openai package installed)
-import openai
-from context_gatherer import OpenMenderContext
+### Submission Helper
+`submission_helper.py` - A utility for creating GitHub issues and pull requests programmatically.
 
-# Get context
-gatherer = OpenMenderContext(github_token)
-context = gatherer.format_for_llm("basic")
+#### Purpose
+Helps automate the creation of issues and pull requests, particularly useful for automated improvements and updates.
 
-# Use with LLM
-response = openai.ChatCompletion.create(
-    model="gpt-4",
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant for the OpenMender project."},
-        {"role": "user", "content": f"Given this context about OpenMender:\n\n{context}\n\nWhat would be a good first contribution?"}
-    ]
-)
-
-# Example getting source code for analysis
-source_files = gatherer.format_for_llm("tools")
-response = openai.ChatCompletion.create(
-    model="gpt-4",
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant for the OpenMender project."},
-        {"role": "user", "content": f"Here are the source files:\n\n{source_files}\n\nCan you suggest improvements?"}
-    ]
-)
+#### Installation
+```bash
+pip install -r requirements.txt
 ```
+
+#### Usage
+Creating an issue:
+```bash
+python submission_helper.py --token YOUR_TOKEN issue \
+    --title "Issue Title" \
+    --body "Issue description" \
+    --labels "enhancement,help wanted"
+```
+
+Creating a pull request:
+```bash
+# First create a files.yml with your changes:
+# files.yml
+"path/to/file.py": |
+    # Your file content here
+"another/file.md": |
+    # Another file content
+
+# Then create the PR
+python submission_helper.py --token YOUR_TOKEN pr \
+    --title "PR Title" \
+    --body "PR description" \
+    --branch feature/your-feature \
+    --files files.yml
+```
+
+Options:
+- Issue creation:
+  - `--title`: Issue title (required)
+  - `--body`: Issue description (required)
+  - `--labels`: Comma-separated list of labels
+  - `--template`: Name of issue template to use
+
+- Pull request creation:
+  - `--title`: PR title (required)
+  - `--body`: PR description (required)
+  - `--branch`: Name for the new branch (required)
+  - `--files`: YAML file containing file paths and contents (required)
+  - `--base`: Base branch to create PR against (default: main)
 
 ## Contributing New Tools
 

@@ -86,7 +86,7 @@ As the project evolves, we aim to:
 - Create a reputation system for contributors
 
 ## License
-[MIT License](LICENSE)
+[![License: CC0-1.0](https://img.shields.io/github/license/Quasimondo/OpenMender)](LICENSE)
 
 ## Contact
 - Create an issue for questions

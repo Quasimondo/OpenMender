@@ -76,6 +76,12 @@ The agent is being built incrementally through the bootstrap system. Current com
 - Maintain code style
 - Clear communication
 
+### Community Preservation
+- Respect "good first issue" and similar tags
+- Focus on long-standing issues
+- Avoid disrupting community growth opportunities
+- Maintain configurable filters for issue selection
+
 ## Development Guidelines
 
 ### Adding New Components

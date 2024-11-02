@@ -128,7 +128,9 @@ class OpenMenderContext:
             "discussions": self.get_discussions,
             "contribution": self.get_contribution_context,
             "bootstrap": lambda: self.get_component_context("bootstrap"),
-            "agent": lambda: self.get_component_context("agent")
+            "agent": lambda: self.get_component_context("agent"),
+            "files": lambda: self.get_file_tree(),  # New option
+            "tools": lambda: self.get_source_files()  # New option
         }
         
         if context_type not in contexts and context_type != "all":
@@ -142,6 +144,61 @@ class OpenMenderContext:
             result = contexts[context_type]()
             
         return self._format_context(result)
+    
+    def get_file_tree(self, path: str = "", max_file_size: int = 50000) -> Dict:
+        """
+        Get repository file tree with optional file contents.
+        max_file_size: Maximum file size in bytes to include content (default 50KB)
+        """
+        try:
+            contents = self.repo.get_contents(path)
+            tree = {}
+            
+            if not isinstance(contents, list):
+                contents = [contents]
+                
+            for content in contents:
+                if content.type == "dir":
+                    tree[content.path] = {
+                        "type": "directory",
+                        "contents": self.get_file_tree(content.path, max_file_size)
+                    }
+                else:
+                    tree[content.path] = {
+                        "type": "file",
+                        "size": content.size,
+                        "content": (base64.b64decode(content.content).decode('utf-8')
+                                   if content.size <= max_file_size else "File too large")
+                    }
+            return tree
+        except Exception as e:
+            print(f"Warning: Could not fetch file tree for {path}: {str(e)}")
+            return {}
+
+    def get_source_files(self, directory: str = "bootstrap/tools", 
+                        extensions: List[str] = ['.py', '.md']) -> Dict:
+        """
+        Get source files from a specific directory with their contents
+        """
+        try:
+            files = {}
+            contents = self.repo.get_contents(directory)
+            
+            if not isinstance(contents, list):
+                contents = [contents]
+                
+            for content in contents:
+                if content.type == "file" and any(content.path.endswith(ext) for ext in extensions):
+                    files[content.path] = {
+                        "content": base64.b64decode(content.content).decode('utf-8'),
+                        "size": content.size,
+                        "sha": content.sha
+                    }
+            return files
+        except Exception as e:
+            print(f"Warning: Could not fetch source files from {directory}: {str(e)}")
+            return {}
+    
     
     def _get_file_content(self, path: str) -> Optional[str]:
         """Get content of a file from the repository"""
@@ -216,17 +273,16 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(
         description='Gather context from OpenMender repository for LLM interactions',
-        epilog='Example: python context_gatherer.py --context issues --output issues.txt'
+        epilog='Example: python context_gatherer.py --context files --directory bootstrap/tools'
     )
-    
     parser.add_argument(
         '--token', 
         help='GitHub personal access token for authentication (increases rate limits)'
     )
-    
     parser.add_argument(
         '--context', 
-        choices=['all', 'basic', 'issues', 'discussions', 'contribution', 'bootstrap', 'agent'],
+        choices=['all', 'basic', 'issues', 'discussions', 'contribution', 
+                'bootstrap', 'agent', 'files', 'tools'],  # Added 'files' and 'tools'
         default='all', 
         help='''Type of context to gather:
                 all: Everything
@@ -235,23 +291,51 @@ def main():
                 discussions: Active discussions
                 contribution: Contributing guidelines and templates
                 bootstrap: Bootstrap system context
-                agent: Agent system context'''
+                agent: Agent system context
+                files: File structure and contents
+                tools: Source files in tools directory'''
     )
     parser.add_argument(
         '--output', 
         help='Output file path (if not specified, prints to stdout)'
     )
+    parser.add_argument(
+        '--directory',
+        help='Specific directory to examine (for files and tools context)',
+        default='bootstrap/tools'
+    )
+    parser.add_argument(
+        '--extensions',
+        help='File extensions to include (comma-separated)',
+        default='.py,.md'
+    )
+    parser.add_argument(
+        '--max-file-size',
+        type=int,
+        help='Maximum file size in bytes to include content',
+        default=50000
+    )
     
+    # Parse the arguments
     args = parser.parse_args()
-    
     gatherer = OpenMenderContext(args.token)
-    result = gatherer.format_for_llm(args.context)
+    
+    if args.context in ['files', 'tools']:
+        if args.context == 'files':
+            result = gatherer.get_file_tree(args.directory, args.max_file_size)
+        else:
+            extensions = args.extensions.split(',')
+            result = gatherer.get_source_files(args.directory, extensions)
+    else:
+        result = gatherer.format_for_llm(args.context)
+    
+    formatted = yaml.dump(result, sort_keys=False, width=80, indent=2)
     
     if args.output:
         with open(args.output, 'w') as f:
-            f.write(result)
+            f.write(formatted)
     else:
-        print(result)
+        print(formatted)
 
 if __name__ == "__main__":
     main()

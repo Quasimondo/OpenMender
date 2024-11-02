@@ -21,7 +21,9 @@ class SubmissionHelper:
                     title: str, 
                     body: str, 
                     labels: List[str] = None,
-                    template: str = None) -> Dict:
+                    template: str = None,
+                    assignees: List[str] = None,
+                    milestone: int = None) -> Dict:
         """
         Create a new issue
         
@@ -30,6 +32,8 @@ class SubmissionHelper:
             body: Issue body
             labels: List of label names
             template: Name of issue template to use
+            assignees: List of GitHub usernames to assign
+            milestone: Milestone number to assign
         """
         try:
             if template:
@@ -37,10 +41,23 @@ class SubmissionHelper:
                 if template_content:
                     body = self._apply_template(template_content, body)
             
+            # Validate milestone if provided
+            if milestone is not None:
+                try:
+                    milestone_obj = self.repo.get_milestone(milestone)
+                except:
+                    return {
+                        "status": "error",
+                        "message": f"Milestone {milestone} not found"
+                    }
+            
+            # Create issue with basic parameters
             issue = self.repo.create_issue(
                 title=title,
                 body=body,
-                labels=labels
+                labels=labels,
+                assignees=assignees,
+                milestone=milestone_obj if milestone is not None else None
             )
             
             return {
@@ -60,7 +77,9 @@ class SubmissionHelper:
                           body: str,
                           branch_name: str,
                           files: Dict[str, str],
-                          base_branch: str = "main") -> Dict:
+                          base_branch: str = "main",
+                          assignees: List[str] = None,
+                          milestone: int = None) -> Dict:
         """
         Create a new pull request
         
@@ -70,6 +89,8 @@ class SubmissionHelper:
             branch_name: Name for the new branch
             files: Dict of filepath: content pairs
             base_branch: Branch to create PR against
+            assignees: List of GitHub usernames to assign
+            milestone: Milestone number to assign
         """
         try:
             # Create new branch
@@ -100,6 +121,17 @@ class SubmissionHelper:
                         branch=branch_name
                     )
             
+            # Validate milestone if provided
+            milestone_obj = None
+            if milestone is not None:
+                try:
+                    milestone_obj = self.repo.get_milestone(milestone)
+                except:
+                    return {
+                        "status": "error",
+                        "message": f"Milestone {milestone} not found"
+                    }
+            
             # Create pull request
             pr = self.repo.create_pull(
                 title=title,
@@ -107,6 +139,12 @@ class SubmissionHelper:
                 head=branch_name,
                 base=base_branch
             )
+            
+            # Add assignees and milestone if provided
+            if assignees:
+                pr.add_to_assignees(*assignees)
+            if milestone_obj:
+                pr.issue().edit(milestone=milestone_obj)
             
             return {
                 "number": pr.number,
@@ -154,6 +192,8 @@ def main():
     issue_parser.add_argument('--body', required=True, help='Issue body')
     issue_parser.add_argument('--labels', help='Comma-separated list of labels')
     issue_parser.add_argument('--template', help='Name of issue template to use')
+    issue_parser.add_argument('--assignees', help='Comma-separated list of assignees')
+    issue_parser.add_argument('--milestone', type=int, help='Milestone number')
     
     # PR parser
     pr_parser = subparsers.add_parser('pr', help='Create a pull request')
@@ -164,6 +204,8 @@ def main():
                           help='YAML file containing file paths and contents')
     pr_parser.add_argument('--base', default='main', 
                           help='Base branch (default: main)')
+    pr_parser.add_argument('--assignees', help='Comma-separated list of assignees')
+    pr_parser.add_argument('--milestone', type=int, help='Milestone number')
     
     args = parser.parse_args()
     
@@ -171,23 +213,29 @@ def main():
     
     if args.command == 'issue':
         labels = args.labels.split(',') if args.labels else None
+        assignees = args.assignees.split(',') if args.assignees else None
         result = helper.create_issue(
             title=args.title,
             body=args.body,
             labels=labels,
-            template=args.template
+            template=args.template,
+            assignees=assignees,
+            milestone=args.milestone
         )
         
     elif args.command == 'pr':
         with open(args.files, 'r') as f:
             files = yaml.safe_load(f)
         
+        assignees = args.assignees.split(',') if args.assignees else None
         result = helper.create_pull_request(
             title=args.title,
             body=args.body,
             branch_name=args.branch,
             files=files,
-            base_branch=args.base
+            base_branch=args.base,
+            assignees=assignees,
+            milestone=args.milestone
         )
     
     print(yaml.dump(result, sort_keys=False))

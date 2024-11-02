@@ -99,6 +99,12 @@ As the project evolves, we aim to:
 - Join our [Discord/Matrix] channel (coming soon)
 - Follow project updates
 
+## Related Projects
+
+### AI-Assisted Development
+- [Claudine](https://github.com/xemantic/claudine) - An AI agent using Claude to interact with local systems and assist developers through command-line tools. Focuses on general-purpose assistance and local system interaction.
+
+
 ---
 
 > "Small improvements, consistently made, create extraordinary results."

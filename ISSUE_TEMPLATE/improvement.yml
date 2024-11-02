@@ -1,0 +1,35 @@
+name: Improvement Proposal
+description: Suggest an improvement to existing functionality
+title: "[IMPROVE] "
+labels: ["improvement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve OpenMender!
+  - type: textarea
+    id: current-state
+    attributes:
+      label: Current State
+      description: What's the current situation?
+      placeholder: Describe what currently exists...
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-improvement
+    attributes:
+      label: Proposed Improvement
+      description: How could it be better?
+      placeholder: Describe your proposed changes...
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact Level
+      options:
+        - Minor (small improvement)
+        - Moderate (significant improvement)
+        - Major (substantial change)
+    validations:
+      required: true

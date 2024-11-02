@@ -34,9 +34,21 @@ Available context types:
 - `contribution`: Contributing guidelines and templates
 - `bootstrap`: Bootstrap system context
 - `agent`: Agent system context
+- `files`: File structure and contents
+- `tools`: Source files in tools directory
 
-Output to file:
+Additional options:
 ```bash
+# Get file structure from specific directory
+python context_gatherer.py --context files --directory bootstrap/tools
+
+# Get source files with specific extensions
+python context_gatherer.py --context tools --extensions .py,.md
+
+# Control maximum file size for content inclusion
+python context_gatherer.py --context files --max-file-size 10000
+
+# Output to file instead of stdout
 python context_gatherer.py --context issues --output issues.txt
 ```
 
@@ -56,6 +68,16 @@ response = openai.ChatCompletion.create(
     messages=[
         {"role": "system", "content": "You are a helpful assistant for the OpenMender project."},
         {"role": "user", "content": f"Given this context about OpenMender:\n\n{context}\n\nWhat would be a good first contribution?"}
+    ]
+)
+
+# Example getting source code for analysis
+source_files = gatherer.format_for_llm("tools")
+response = openai.ChatCompletion.create(
+    model="gpt-4",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant for the OpenMender project."},
+        {"role": "user", "content": f"Here are the source files:\n\n{source_files}\n\nCan you suggest improvements?"}
     ]
 )
 ```

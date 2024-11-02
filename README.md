@@ -1,5 +1,9 @@
 # OpenMender
 
+## TL;DR
+OpenMender is building a distributed system that autonomously improves open source software. Want to help? Check out our [Getting Started Guide](GETTING_STARTED.md) to learn how to use our development tools with your preferred LLM to contribute improvements.
+
+
 ## Manifesto
 
 Software is the invisible fabric that shapes our modern world. Open source software, built through the collaborative effort of countless individuals, forms the foundation of this digital infrastructure. Yet, across millions of repositories, there are countless small imperfections: bugs waiting to be fixed, optimizations waiting to be made, security vulnerabilities waiting to be patched.

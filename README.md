@@ -20,6 +20,12 @@ To create an autonomous, distributed system that continuously improves open sour
 
 5. **Distributed Ownership**: No single entity should control this system. Like the open source projects it aims to improve, it belongs to the community.
 
+6. **Preserve Community Growth**: We recognize that easily fixable issues often serve as valuable entry points for new contributors. OpenMender will:
+   - Respect issues tagged as "good first issue", "first-timers-only", "beginner friendly" etc.
+   - Focus on issues that have remained unaddressed for extended periods
+   - Prioritize fixes for issues that might deter rather than encourage new contributors
+   - Work alongside human contributors, not replace them6. 
+
 ### Why Now?
 We stand at a unique moment in technological history. The tools for automated code analysis, generation, and verification have reached a level of sophistication that makes this vision possible. Yet we're also seeing the limitations of centralized AI systems. By creating a distributed, community-driven approach to code improvement, we can harness the power of AI while maintaining the open, collaborative spirit that makes open source software great.
 
